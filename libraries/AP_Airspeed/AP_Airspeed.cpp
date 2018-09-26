@@ -27,6 +27,7 @@
 #include "AP_Airspeed_MS4525.h"
 #include "AP_Airspeed_MS5525.h"
 #include "AP_Airspeed_SDP3X.h"
+#include "AP_Airspeed_i2cFAN.h"
 #include "AP_Airspeed_DLVR.h"
 #include "AP_Airspeed_analog.h"
 #include "AP_Airspeed_Backend.h"
@@ -252,6 +253,9 @@ void AP_Airspeed::init()
         case TYPE_I2C_SDP3X:
             sensor[i] = new AP_Airspeed_SDP3X(*this, i);
             break;
+        case TYPE_I2C_FAN:
+            sensor[i] = new AP_Airspeed_i2cFAN(*this, i);
+            break;
         case TYPE_I2C_DLVR:
 #if !HAL_MINIMIZE_FEATURES
             sensor[i] = new AP_Airspeed_DLVR(*this, i);
@@ -361,14 +365,21 @@ void AP_Airspeed::read(uint8_t i)
     if (!enabled(i) || !sensor[i]) {
         return;
     }
+
+    if ((enum airspeed_type)param[i].type.get() == TYPE_I2C_FAN) {
+        state[i].last_pressure  = 0;
+        state[i].raw_airspeed   = get_pressure(i);
+        state[i].airspeed       = get_pressure(i);
+        state[i].last_update_ms = AP_HAL::millis();
+        return;
+    }
+
     bool prev_healthy = state[i].healthy;
     float raw_pressure = get_pressure(i);
     if (state[i].cal.start_ms != 0) {
         update_calibration(i, raw_pressure);
     }
-    
     airspeed_pressure = raw_pressure - param[i].offset;
-
     // remember raw pressure for logging
     state[i].corrected_pressure = airspeed_pressure;
 
