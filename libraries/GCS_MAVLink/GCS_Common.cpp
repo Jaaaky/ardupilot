@@ -1814,6 +1814,10 @@ void GCS_MAVLINK::send_scaled_pressure_instance(uint8_t instance, void (*send_fn
     if (airspeed != nullptr &&
         airspeed->enabled(instance)) {
         press_diff = airspeed->get_differential_pressure(instance) * 0.01f;
+        float airspeed_temperature = 0.0f;
+        if (airspeed->get_temperature(airspeed_temperature)) {
+            temperature = airspeed_temperature*100.0f;
+        }
         have_data = true;
     }
 
