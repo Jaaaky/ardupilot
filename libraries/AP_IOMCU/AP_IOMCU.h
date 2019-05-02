@@ -200,7 +200,7 @@ private:
     bool done_shutdown;
 
     bool crc_is_ok;
-    bool detected_io_reset;
+    uint16_t detected_io_reset {0};
     bool initialised;
     bool is_chibios_backend;
 

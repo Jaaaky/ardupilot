@@ -930,9 +930,9 @@ void AP_IOMCU::check_iomcu_reset(void)
         // all OK
         return;
     }
-    detected_io_reset = true;
+    detected_io_reset++;
     AP::internalerror().error(AP_InternalError::error_t::iomcu_reset);
-    hal.console->printf("IOMCU reset\n");
+    hal.console->printf("IOMCU reset #%u\n", detected_io_reset);
     // we need to ensure the mixer data and the rates are sent over to
     // the IOMCU
     if (mixing.enabled) {
