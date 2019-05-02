@@ -23,6 +23,17 @@ void Plane::init_ardupilot()
     // initialise serial port
     serial_manager.init_console();
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
+    for(int8_t i = 1; i > 0; i++)
+    {
+        hal.console->printf("\n\n");
+    }
+#endif
+
+    hal.console->printf("\n\n+-+-+-+-+-+-+-+-+-+\n"
+                        "|A|r|d|u|P|l|a|n|e|\n"
+                        "+-+-+-+-+-+-+-+-+-+\n");
+
     hal.console->printf("\n\nInit %s"
                         "\n\nFree RAM: %u\n",
                         AP::fwversion().fw_string,
