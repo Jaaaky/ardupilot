@@ -19,6 +19,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Logger/AP_Logger.h>
 #include <AP_NMEA_Output/AP_NMEA_Output.h>
+#include <stdio.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -251,11 +252,13 @@ Vector2f AP_AHRS::groundspeed_vector(void)
     float airspeed = 0;
     const bool gotAirspeed = airspeed_estimate_true(&airspeed);
     const bool gotGPS = (AP::gps().status() >= AP_GPS::GPS_OK_FIX_2D);
+    ::printf("gotAirspeed=%i gotGPS=%i ", gotAirspeed, gotGPS);
     if (gotAirspeed) {
         const Vector3f wind = wind_estimate();
         const Vector2f wind2d(wind.x, wind.y);
         const Vector2f airspeed_vector(_cos_yaw * airspeed, _sin_yaw * airspeed);
         gndVelADS = airspeed_vector + wind2d;
+        ::printf("wind.x=%.2f wind.y=%.2f gndVelADS=%.2f\n", wind.x, wind.y, gndVelADS.length());
     }
 
     // Generate estimate of ground speed vector using GPS
@@ -303,6 +306,7 @@ Vector2f AP_AHRS::groundspeed_vector(void)
         const Vector3f wind = wind_estimate();
         ret.x += wind.x;
         ret.y += wind.y;
+        ::printf("wind.x=%.2f wind.y=%.2f DeadReckon=%.2f\n", wind.x, wind.y, ret.length());
         return ret;
     }
 
