@@ -82,31 +82,35 @@ bool Plane::suppress_throttle(void)
 
     bool gps_movement = (gps.status() >= AP_GPS::GPS_OK_FIX_2D && gps.ground_speed() >= 5);
     
-    if (control_mode == &mode_auto &&
-        auto_state.takeoff_complete == false) {
-
-        uint32_t launch_duration_ms = ((int32_t)g.takeoff_throttle_delay)*100 + 2000;
-        if (is_flying() &&
-            millis() - started_flying_ms > MAX(launch_duration_ms, 5000U) && // been flying >5s in any mode
-            adjusted_relative_altitude_cm() > 500 && // are >5m above AGL/home
-            labs(ahrs.pitch_sensor) < 3000 && // not high pitch, which happens when held before launch
-            gps_movement) { // definite gps movement
-            // we're already flying, do not suppress the throttle. We can get
-            // stuck in this condition if we reset a mission and cmd 1 is takeoff
-            // but we're currently flying around below the takeoff altitude
+    if (control_mode == &mode_auto) {
+        if (auto_state.takeoff_complete == false) {
+            uint32_t launch_duration_ms = ((int32_t)g.takeoff_throttle_delay)*100 + 2000;
+            if (is_flying() &&
+                millis() - started_flying_ms > MAX(launch_duration_ms, 5000U) && // been flying >5s in any mode
+                adjusted_relative_altitude_cm() > 500 && // are >5m above AGL/home
+                labs(ahrs.pitch_sensor) < 3000 && // not high pitch, which happens when held before launch
+                gps_movement) { // definite gps movement
+                // we're already flying, do not suppress the throttle. We can get
+                // stuck in this condition if we reset a mission and cmd 1 is takeoff
+                // but we're currently flying around below the takeoff altitude
+                throttle_suppressed = false;
+                return false;
+            }
+            if (auto_takeoff_check()) {
+                // we're in auto takeoff
+                throttle_suppressed = false;
+                auto_state.baro_takeoff_alt = barometer.get_altitude();
+                return false;
+            }
+            // keep throttle suppressed
+            ::printf("keep throttle suppressed\n");
+            return true;
+        } else {
             throttle_suppressed = false;
             return false;
         }
-        if (auto_takeoff_check()) {
-            // we're in auto takeoff 
-            throttle_suppressed = false;
-            auto_state.baro_takeoff_alt = barometer.get_altitude();
-            return false;
-        }
-        // keep throttle suppressed
-        return true;
     }
-    
+
     if (fabsf(relative_altitude) >= 10.0f) {
         // we're more than 10m from the home altitude
         throttle_suppressed = false;
